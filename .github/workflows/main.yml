@@ -32,11 +32,14 @@ jobs:
       - name: Gerar index.html
         run: python build_calendar.py
 
+      - name: Desativar Jekyll
+        run: touch .nojekyll
+
       - name: Commit se houver mudanca
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add index.html seed.csv
+          git add index.html seed.csv .nojekyll
           if git diff --staged --quiet; then
             echo "Sem mudancas."
           else

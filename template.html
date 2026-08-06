@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calendário de Resultados 2T26 · B3</title>
+<style>
+  :root{
+    --bg:#0f1620; --panel:#16202c; --panel2:#1c2836; --line:#26333f;
+    --txt:#e8edf2; --muted:#93a4b3; --accent:#4ea1ff; --accent2:#7ee0c0;
+    --today:#ffb454; --chip:#22303f; --shadow:0 8px 30px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:linear-gradient(180deg,#0d131b,#0f1620 240px);color:var(--txt);
+    font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.45;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1180px;margin:0 auto;padding:28px 20px 60px}
+  header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px;
+    border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:22px}
+  h1{font-size:26px;margin:0 0 4px;letter-spacing:.2px}
+  h1 span{color:var(--accent)}
+  .sub{color:var(--muted);font-size:13.5px}
+  .stats{display:flex;gap:22px;flex-wrap:wrap}
+  .stat{text-align:right}
+  .stat b{display:block;font-size:24px;color:var(--accent2)}
+  .stat small{color:var(--muted);font-size:11.5px;text-transform:uppercase;letter-spacing:.6px}
+  .toolbar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:20px}
+  .search{flex:1;min-width:220px;position:relative}
+  .search input{width:100%;background:var(--panel);border:1px solid var(--line);color:var(--txt);
+    padding:11px 14px 11px 38px;border-radius:10px;font-size:14px;outline:none}
+  .search input:focus{border-color:var(--accent)}
+  .search svg{position:absolute;left:12px;top:11px;opacity:.5}
+  .seg{display:flex;background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .seg button{background:none;border:none;color:var(--muted);padding:10px 16px;cursor:pointer;font-size:13.5px;font-weight:600}
+  .seg button.on{background:var(--accent);color:#04101d}
+  .months{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+  .months button{background:var(--panel);border:1px solid var(--line);color:var(--muted);
+    padding:8px 14px;border-radius:999px;cursor:pointer;font-size:13px;font-weight:600}
+  .months button.on{background:var(--panel2);color:var(--txt);border-color:var(--accent)}
+  .months button .b{display:inline-block;margin-left:6px;background:var(--chip);color:var(--accent2);
+    border-radius:999px;padding:1px 8px;font-size:11px}
+  /* calendar grid */
+  .cal{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:var(--shadow)}
+  .calhead{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-bottom:8px}
+  .calhead div{color:var(--muted);font-size:11.5px;text-align:center;text-transform:uppercase;letter-spacing:.5px;font-weight:700}
+  .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+  .cell{background:var(--panel2);border:1px solid var(--line);border-radius:10px;min-height:104px;padding:8px;
+    display:flex;flex-direction:column;gap:6px;transition:transform .08s}
+  .cell.empty{background:transparent;border:none}
+  .cell.has{cursor:pointer}
+  .cell.has:hover{transform:translateY(-2px);border-color:var(--accent)}
+  .cell .dn{font-size:13px;color:var(--muted);font-weight:700;display:flex;justify-content:space-between;align-items:center}
+  .cell.today{border-color:var(--today)}
+  .cell.today .dn{color:var(--today)}
+  .cell .cnt{background:var(--accent);color:#04101d;border-radius:999px;font-size:11px;padding:1px 8px;font-weight:800}
+  .tks{display:flex;flex-wrap:wrap;gap:4px;overflow:hidden}
+  .tk{background:var(--chip);border:1px solid var(--line);color:var(--txt);font-size:10.5px;
+    padding:1px 6px;border-radius:6px;font-weight:600}
+  .tk.more{background:transparent;color:var(--muted);border:none}
+  /* list */
+  .list{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:var(--shadow)}
+  .daygroup{border-bottom:1px solid var(--line)}
+  .daygroup:last-child{border-bottom:none}
+  .dgh{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--panel2);position:sticky;top:0}
+  .dgh .d{font-weight:800;font-size:14px}
+  .dgh .wd{color:var(--muted);font-size:12.5px}
+  .dgh .c{margin-left:auto;background:var(--chip);color:var(--accent2);border-radius:999px;padding:2px 10px;font-size:12px;font-weight:700}
+  .dgh.today{border-left:3px solid var(--today)}
+  table{width:100%;border-collapse:collapse}
+  td{padding:9px 16px;border-top:1px solid var(--line);font-size:13.5px;vertical-align:middle}
+  tr:first-child td{border-top:none}
+  .tkcol{width:96px}
+  .tkcol .tk{font-size:12px}
+  .tp{color:var(--muted);font-size:12px;text-align:right}
+  .empty-msg{padding:40px;text-align:center;color:var(--muted)}
+  /* detail modal */
+  .modal{position:fixed;inset:0;background:rgba(4,10,16,.7);display:none;align-items:center;justify-content:center;padding:20px;z-index:50}
+  .modal.on{display:flex}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;max-width:520px;width:100%;
+    max-height:80vh;overflow:auto;box-shadow:var(--shadow)}
+  .card h3{margin:0;padding:18px 20px;border-bottom:1px solid var(--line);font-size:17px;display:flex;justify-content:space-between;align-items:center}
+  .card h3 button{background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;line-height:1}
+  .card ul{list-style:none;margin:0;padding:6px 0}
+  .card li{display:flex;align-items:center;gap:12px;padding:9px 20px;border-top:1px solid var(--line)}
+  .card li:first-child{border-top:none}
+  footer{margin-top:26px;color:var(--muted);font-size:12.5px;border-top:1px solid var(--line);padding-top:16px}
+  footer a{color:var(--accent)}
+  .note{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--today);
+    border-radius:8px;padding:12px 14px;color:var(--muted);font-size:12.5px;margin-top:14px}
+  @media(max-width:720px){
+    .cell{min-height:78px}.tks{display:none}
+    .stat b{font-size:20px}.grid{gap:5px}.calhead{gap:5px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Calendário de Resultados · <span id="triLabel"></span></h1>
+      <div class="sub" id="subLabel"></div>
+    </div>
+    <div class="stats">
+      <div class="stat"><b id="stTotal">0</b><small>Empresas</small></div>
+      <div class="stat"><b id="stDias">0</b><small>Datas</small></div>
+      <div class="stat"><b id="stProx">–</b><small>Próxima data</small></div>
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <div class="search">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+      <input id="q" placeholder="Buscar por ticker ou empresa (ex.: VALE, Itaú, PETR4)…" autocomplete="off">
+    </div>
+    <div class="seg">
+      <button data-view="cal" class="on">Calendário</button>
+      <button data-view="list">Lista</button>
+    </div>
+  </div>
+
+  <div class="months" id="months"></div>
+
+  <div id="calView">
+    <div class="cal">
+      <div class="calhead"><div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div></div>
+      <div class="grid" id="grid"></div>
+    </div>
+  </div>
+
+  <div id="listView" style="display:none">
+    <div class="list" id="list"></div>
+  </div>
+
+  <div class="note" id="note"></div>
+
+  <footer>
+    <div id="footNote"></div>
+  </footer>
+</div>
+
+<div class="modal" id="modal">
+  <div class="card">
+    <h3><span id="mTitle"></span><button onclick="closeModal()">×</button></h3>
+    <ul id="mList"></ul>
+  </div>
+</div>
+
+<script>
+__DATA__
+const D = window.EARNINGS, M = window.META;
+const WD = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
+const WDFULL = ["domingo","segunda-feira","terça-feira","quarta-feira","quinta-feira","sexta-feira","sábado"];
+const TODAY = (function(){var d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");})();
+let view = "cal", curMonth = TODAY.slice(0,7), query = "";
+
+document.getElementById("triLabel").textContent = M.trimestre + " · B3";
+document.getElementById("subLabel").innerHTML =
+  "Divulgação de resultados (ITR) das empresas listadas na B3 &middot; dados coletados em " + M.snapshot;
+document.getElementById("note").innerHTML =
+  "<b>Cobertura:</b> " + M.total + " empresas com data de divulgação disponível na fonte. " +
+  "A agenda lista os resultados <b>ainda não divulgados</b> do " + M.trimestre + " — empresas que já reportaram antes de " +
+  M.snapshot + " podem não constar. Datas são previstas e podem ser reapresentadas pelas companhias.";
+document.getElementById("footNote").innerHTML =
+  "Fonte: <a href='" + M.fonteUrl + "' target='_blank'>" + M.fonte + "</a> · " +
+  "Universo: companhias listadas na B3 (base B3 ∩ CVM) com calendário de eventos corporativos publicado. " +
+  "Datas das empresas do Ibovespa auditadas contra o RI oficial das companhias. " +
+  "Atualização trimestral automática.";
+
+function parseISO(s){const[a,b,c]=s.split("-").map(Number);return new Date(a,b-1,c);}
+function fmtLong(iso){const d=parseISO(iso);return String(d.getDate()).padStart(2,"0")+"/"+String(d.getMonth()+1).padStart(2,"0")+"/"+d.getFullYear();}
+
+function filtered(){
+  if(!query) return D;
+  const s = query.toLowerCase();
+  return D.filter(r => r.ticker.toLowerCase().includes(s) || r.empresa.toLowerCase().includes(s));
+}
+function monthsPresent(rows){
+  const set = {};
+  rows.forEach(r => { const k = r.ano+"-"+String(r.mes).padStart(2,"0"); set[k]=(set[k]||0)+1; });
+  return set;
+}
+function renderMonths(){
+  const rows = filtered();
+  const set = monthsPresent(rows);
+  const keys = Object.keys(set).sort();
+  const box = document.getElementById("months");
+  box.innerHTML = "";
+  if(!keys.includes(curMonth) && keys.length){ var cm=TODAY.slice(0,7); curMonth = keys.includes(cm)?cm:(keys.find(function(k){return k>=cm;})||keys[keys.length-1]); }
+  keys.forEach(k => {
+    const [y,m] = k.split("-").map(Number);
+    const b = document.createElement("button");
+    b.className = (k===curMonth?"on":"");
+    b.innerHTML = M.meses[m] + " " + y + " <span class='b'>" + set[k] + "</span>";
+    b.onclick = () => { curMonth = k; renderAll(); };
+    box.appendChild(b);
+  });
+  box.style.display = (view==="cal" && keys.length) ? "flex" : "none";
+}
+function renderStats(){
+  const rows = filtered();
+  const dates = [...new Set(rows.map(r=>r.iso))].sort();
+  document.getElementById("stTotal").textContent = rows.length;
+  document.getElementById("stDias").textContent = dates.length;
+  const prox = dates.find(d => d >= TODAY) || dates[0];
+  document.getElementById("stProx").textContent = prox ? fmtLong(prox).slice(0,5) : "–";
+}
+function renderCal(){
+  const rows = filtered().filter(r => (r.ano+"-"+String(r.mes).padStart(2,"0"))===curMonth);
+  const byDay = {};
+  rows.forEach(r => (byDay[r.dia]=byDay[r.dia]||[]).push(r));
+  const [y,m] = curMonth.split("-").map(Number);
+  const first = new Date(y,m-1,1).getDay();
+  const days = new Date(y,m,0).getDate();
+  const grid = document.getElementById("grid");
+  grid.innerHTML = "";
+  for(let i=0;i<first;i++){const e=document.createElement("div");e.className="cell empty";grid.appendChild(e);}
+  for(let d=1;d<=days;d++){
+    const iso = y+"-"+String(m).padStart(2,"0")+"-"+String(d).padStart(2,"0");
+    const list = byDay[d]||[];
+    const cell = document.createElement("div");
+    cell.className = "cell" + (list.length?" has":"") + (iso===TODAY?" today":"");
+    let inner = "<div class='dn'><span>"+d+"</span>"+(list.length?"<span class='cnt'>"+list.length+"</span>":"")+"</div>";
+    if(list.length){
+      inner += "<div class='tks'>";
+      list.slice(0,4).forEach(r=>inner+="<span class='tk'>"+r.ticker+"</span>");
+      if(list.length>4) inner+="<span class='tk more'>+"+(list.length-4)+"</span>";
+      inner += "</div>";
+      cell.onclick = () => openModal(iso, list);
+    }
+    cell.innerHTML = inner;
+    grid.appendChild(cell);
+  }
+}
+function renderList(){
+  const rows = filtered().slice().sort((a,b)=> a.iso<b.iso?-1:a.iso>b.iso?1:a.ticker.localeCompare(b.ticker));
+  const box = document.getElementById("list");
+  if(!rows.length){box.innerHTML="<div class='empty-msg'>Nenhuma empresa encontrada.</div>";return;}
+  const byDate = {};
+  rows.forEach(r => (byDate[r.iso]=byDate[r.iso]||[]).push(r));
+  let html = "";
+  Object.keys(byDate).sort().forEach(iso => {
+    const d = parseISO(iso), list = byDate[iso];
+    const today = iso===TODAY;
+    html += "<div class='daygroup'>";
+    html += "<div class='dgh"+(today?" today":"")+"'><span class='d'>"+fmtLong(iso)+"</span>"+
+            "<span class='wd'>"+WDFULL[d.getDay()]+(today?" · hoje":"")+"</span>"+
+            "<span class='c'>"+list.length+" empresa"+(list.length>1?"s":"")+"</span></div>";
+    html += "<table>";
+    list.forEach(r => {
+      html += "<tr><td class='tkcol'><span class='tk'>"+r.ticker+"</span></td><td>"+r.empresa+"</td><td class='tp'>"+r.tipo+"</td></tr>";
+    });
+    html += "</table></div>";
+  });
+  box.innerHTML = html;
+}
+function openModal(iso, list){
+  const d = parseISO(iso);
+  document.getElementById("mTitle").textContent = fmtLong(iso) + " · " + WDFULL[d.getDay()];
+  document.getElementById("mList").innerHTML = list
+    .sort((a,b)=>a.ticker.localeCompare(b.ticker))
+    .map(r=>"<li><span class='tk'>"+r.ticker+"</span><span>"+r.empresa+"</span></li>").join("");
+  document.getElementById("modal").classList.add("on");
+}
+function closeModal(){document.getElementById("modal").classList.remove("on");}
+document.getElementById("modal").addEventListener("click",e=>{if(e.target.id==="modal")closeModal();});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal();});
+
+function renderAll(){
+  renderMonths(); renderStats();
+  if(view==="cal"){renderCal();document.getElementById("calView").style.display="";document.getElementById("listView").style.display="none";}
+  else{renderList();document.getElementById("calView").style.display="none";document.getElementById("listView").style.display="";}
+}
+document.querySelectorAll(".seg button").forEach(b=>{
+  b.onclick=()=>{document.querySelectorAll(".seg button").forEach(x=>x.classList.remove("on"));
+    b.classList.add("on");view=b.dataset.view;renderAll();};
+});
+let t;
+document.getElementById("q").addEventListener("input",e=>{
+  clearTimeout(t);t=setTimeout(()=>{query=e.target.value.trim();renderAll();},120);
+});
+renderAll();
+</script>
+</body>
+</html>

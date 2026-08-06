@@ -1,0 +1,45 @@
+name: Atualiza Calendario de Resultados
+
+on:
+  schedule:
+    - cron: "0 11 * * *"
+  push:
+    branches: [ main ]
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-calendario
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar dependencias
+        run: pip install requests beautifulsoup4
+
+      - name: Gerar index.html
+        run: python build_calendar.py
+
+      - name: Commit se houver mudanca
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add index.html seed.csv
+          if git diff --staged --quiet; then
+            echo "Sem mudancas."
+          else
+            git commit -m "Atualiza calendario ($(date -u +%Y-%m-%d))"
+            git push
+          fi
